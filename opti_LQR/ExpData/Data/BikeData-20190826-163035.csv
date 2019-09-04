@@ -1,0 +1,2 @@
+R=2000," Q=[2000, 10, 100]"," MassCenterhAndb=[0.5195, 0.4964]",Description = validation when steering is always zero
+Time,Calculation Time,Reference Velocity,Measured Velocity,Phi,Delta,Phi Dot,Control Input,Velocity Control Input,phi_roll_comp,phi_uncomp,phi_dot,a_x,ay_roll_comp,ay,az,phi_Gyro_intArd,x,y,psi,nu

@@ -1,0 +1,8 @@
+PI gain tuning :
+P = 0.21902
+I = 0.45101
+
+Rise time = 1.68s
+Settling Time = 3.2s
+Overshoot = 0%
+Peak = 1

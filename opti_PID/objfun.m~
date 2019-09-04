@@ -1,0 +1,31 @@
+function [cost] = objfun(pid_coeff)
+%     pid_coeff,
+
+    P_LAT = pid_coeff(1);
+    I_LAT = pid_coeff(2);
+    P_DIR = pid_coeff(3);
+    I_DIR = pid_coeff(4);
+    P_STEER = pid_coeff(5);
+    I_STEER = pid_coeff(6);
+
+    assignin('base','P_LAT',P_LAT);
+    assignin('base','I_LAT',I_LAT);
+    assignin('base','P_DIR',P_DIR);
+    assignin('base','I_DIR',I_DIR);
+    assignin('base','P_STEER',P_STEER);
+    assignin('base','I_STEER',I_STEER);
+
+    %% RUN THE SIMULINK SIMULATION
+
+    try sim('bike_model_v1_20190528_oldmodel_positionfeedback.slx')
+
+    catch Error_Reason
+
+    end
+    
+    try
+        cost = sqrt(sum((X_SIGMA.Data - X_BIKE.Data).^2 + (Y_SIGMA.Data - Y_BIKE.Data).^2));
+    catch
+        cost = 1e9;
+    end
+end

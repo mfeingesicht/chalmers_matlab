@@ -1,0 +1,4 @@
+No noise, no saturation or deadband, no path tracking, only balancing
+2deg step at 5s
+Settling time to within 2% : 1.90s
+Settling time to within 5% : 1.73s

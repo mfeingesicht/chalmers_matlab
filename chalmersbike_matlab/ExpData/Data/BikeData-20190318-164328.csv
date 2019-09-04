@@ -1,0 +1,2 @@
+Time,Calculation Time,Reference Velocity,Measured Velocity,Phi,Delta,Phi Dot,Control Input,Velocity Control Input,phi_roll_comp,phi_uncomp,phi_dot,a_x,ay_roll_comp,ay,az
+0.009662866592407227,0.009662866592407227,3,0.0,0.000936282149939361,-0.062095984522306365,0.0,0.2642026652921093,0.0,0.0104,0.0104,0.0,0.26,0.06,0.06,0.96
