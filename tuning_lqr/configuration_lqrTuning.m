@@ -5,10 +5,10 @@
 simulink_file = 'bike_model_lqrTuning.slx';
 
 % Simulation time
-sim_time = 10;  % Simulation time [s] : Max: 89 sec (due to available noise data)
+sim_time = 25;  % Simulation time [s] : Max: 89 sec (due to available noise data)
 
 % Initial states
-initial_states = [deg2rad(2) deg2rad(0) deg2rad(0)];  % Initial states of the bike at t=0
+initial_states = [deg2rad(0) deg2rad(0) deg2rad(0)];  % Initial states of the bike at t=0
                                                       % [roll angle in rad, steering angle in rad, roll rate in rad/s];
 % % initial_states = [deg2rad(5) deg2rad(-2) deg2rad(0)];  % Initial states of the bike at t=0
                                                       % [roll angle in rad, steering angle in rad, roll rate in rad/s];
@@ -21,6 +21,7 @@ Ts_IMU = 0.04; % Sampling time for the IMU [s]
 %% Physical bike
 % Velocity
 input_velocity = 3;  % Forward velocity [m/s]
+input_velocity = 4;  % Forward velocity [m/s]
 
 % Box position
 box_center = 1;
@@ -159,7 +160,7 @@ steering_motor_limitations = 1; % 1 = enable limitations (deadband, delay) ; 0 =
 path_tracking = 1;              % 1 = enable path tracking ;  0 = only self balancing, no path tracking
 path_tracking_indicator = 1;    % 1 = enable the computation of the performance indicators for path tracking ; 0 = disable
 
-plant_model = 1;  % Choice of the model used to represent the bike
+plant_model = 2;  % Choice of the model used to represent the bike
                   % 1 = nonlinear plant ; 2 = linear plant
                   % 3 = linear plant with neglected fork angle (the simplest plant)
 

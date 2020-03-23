@@ -8,7 +8,7 @@ simulink_file = 'bike_model_pidTuning.slx';
 sim_time = 74;  % Simulation time [s] : Max: 89 sec (due to available noise data)
 
 % Initial states
-initial_states = [deg2rad(-2) deg2rad(0) deg2rad(0)];  % Initial states of the bike at t=0
+initial_states = [deg2rad(0) deg2rad(0) deg2rad(0)];  % Initial states of the bike at t=0
                                                       % [roll angle in rad, steering angle in rad, roll rate in rad/s];
 % % initial_states = [deg2rad(5) deg2rad(-2) deg2rad(0)];  % Initial states of the bike at t=0
                                                       % [roll angle in rad, steering angle in rad, roll rate in rad/s];
@@ -174,17 +174,39 @@ filter_model = 1; % Choice of the model used for the filter estimating the later
 
 %% LQR control
 % LQR weights
-% Q = diag([50,50,10]); % cost of states in LQR controller
-% R = 42; 
+% % % % Q = diag([50,50,10]); % cost of states in LQR controller
+% % % % R = 42; 
+% % % 
+% % % % Q = diag([20,100,10]); % cost of states in LQR controller
+% % % % R = 2000; 
+% % % 
+% % % % GA optimization LQR
+% % % % Q = [15.9549   5.1214   -5.7298
+% % % %      5.1214   27.6373   21.6896
+% % % %     -5.7298   21.6896   27.3988];
+% % % % R = 0.2336;
 
-% Q = diag([20,100,10]); % cost of states in LQR controller
-% R = 2000; 
 
-% GA optimization LQR
-Q = [15.9549   5.1214   -5.7298
-     5.1214   27.6373   21.6896
-    -5.7298   21.6896   27.3988];
-R = 0.2336;
+% 'fast' LQR tests
+% Q = [1000 0 0 ; 0 10 1 ; 0 1 1];
+% Q = [100 0 0 ; 0 10 1  ; 0 1 1];
+% Q = [1 0 0 ; 0 10 1 ; 0 1 1];
+% Q = [10 0 0 ; 0 1 1 ; 0 1 1];
+% Q = [1 0 0 ; 0 1 1 ; 0 1 1];
+% Q = [200 0 0 ; 0 200 5 ; 0 5 200];
+
+% % 'fast' LQR
+% Q = [10 0 0 ; 0 10 1 ; 0 1 1];
+% R = 1;
+
+% % 'medium' LQR
+% Q = [100 0 0 ; 0 100 100 ; 0 100 100];
+% R = 1;
+
+% 'slow' LQR
+Q = [100 100 0 ; 100 100 0 ; 0 0 100];
+R = 1;
+
 
 % Output matrices
 C = eye(3);      % we assume that we measure all states ; does not depent on velocity

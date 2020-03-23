@@ -2,10 +2,11 @@
 
 % Simulink file
 simulink_file = 'bike_model.slx';
-% simulink_file = 'bike_model_pidTuning.slx';
+% simulink_file = 'bike_model2.slx';
 
 % Simulation time
-sim_time = 74;  % Simulation time [s] : Max: 89 sec (due to available noise data)
+sim_time = 74;  % Simulation time [s]
+sim_time = 60;  % Simulation time [s]
 
 % Initial states
 % From data :
@@ -14,20 +15,30 @@ sim_time = 74;  % Simulation time [s] : Max: 89 sec (due to available noise data
 % -2 < phidot < 2
 initial_states = [deg2rad(-2) deg2rad(0) deg2rad(0)];  % Initial states of the bike at t=0
                                                       % [roll angle in rad, steering angle in rad, roll rate in rad/s];
-% % initial_states = [deg2rad(5) deg2rad(-2) deg2rad(0)];  % Initial states of the bike at t=0
-                                                      % [roll angle in rad, steering angle in rad, roll rate in rad/s];
+initial_states = [deg2rad(0) deg2rad(0) deg2rad(0)];
+% initial_states = [deg2rad(-4) deg2rad(-6) deg2rad(-2)];
 
 % Sampling Time
 Ts = 0.04;     % Sampling time for the measurements and control loop [s]
 Ts_IMU = 0.04; % Sampling time for the IMU [s]
 
+% Choose LQR controller type
+% lqr_type = 'fast';
+lqr_type = 'medium';
+% lqr_type = 'slow';
+
 
 %% Physical bike
 % Velocity
 input_velocity = 3;  % Forward velocity [m/s]
+input_velocity = 4;  % Forward velocity [m/s]
 
 % Box position
 box_center = 1;
+
+% Mass distribution
+uneven_mass = 1;
+d_uneven_mass = 0.07;
 
 % Real Bike Parameters
 if box_center
@@ -61,7 +72,6 @@ if box_center
     l_frame_real = 1.8;        % length of the frame representative box along x axis [m]
 
     % Parameters of the box
-%     m_box_real = 12;           % mass of the box containing the electronics [kg]
     m_box_real = 9.3;           % mass of the box containing the electronics [kg]
     h_box_real = 0.49 + r_wheel;         % height of box's center of mass [m]  
     a_box_real = 0.67;         % distance from rear wheel to box's center of mass [m]
@@ -90,7 +100,7 @@ else
     l_frame_real = 1.8;        % length of the frame representative box along x axis [m]
 
     % Parameters of the box
-    m_box_real = 12;           % mass of the box containing the electronics [kg]
+    m_box_real = 9.3;           % mass of the box containing the electronics [kg]
     h_box_real = 0.95;         % height of box's center of mass [m]  
     a_box_real = 0.12;         % distance from rear wheel to box's center of mass [m]
     c_box_real= 0.4;           % length of the representative box along y axis [m]
@@ -113,7 +123,61 @@ parameters_real = [g h_real b_real a_real lambda_real c_real];
 parameters_f_b_real = [m_frame_real m_box_real h_frame_real h_box_real a_frame_real a_box_real c_frame_real c_box_real b_frame_real b_box_real l_frame_real l_box_real];
 parameters_compFilter = [g h_compFilter b_compFilter a_compFilter lambda_compFilter c_compFilter];
 
-% Steering Motor Limitations
+
+%% State-space matrices
+v=3;
+
+% State-space matrices for 1 volume
+% Intermediary variables for clearer matrix definition
+A_1vol = ((m_frame_real/12)*((c_frame_real^2)+(b_frame_real^2)))+(m_frame_real*(h_frame_real^2));
+% B_1vol = ((m_frame_real/12)*((l_frame_real^2)+(b_frame_real^2)))-(m_frame_real*a_frame_real*h_frame_real);
+B_1vol = m_frame_real*a_frame_real*h_frame_real;
+D_1vol = (m_frame_real*h_frame_real*(v^2))-(c_real*g*(m_frame_real*a_frame_real));
+
+% Matrix definition
+% A_bike_1vol = [              0                                            0                         1
+%                              0                                            0                         0
+%                m_frame_real*h_frame_real*g/A_1vol       (D_1vol*sin(lambda_real))/(b_real*A_1vol)   0];
+% 
+% B_bike_1vol = [                     0
+%                                     0
+%                (B_1vol*v*sin(lambda_real))/(b_real*A_1vol)];
+
+a13_bike_1vol = m_frame_real*h_frame_real*g/A_1vol;
+a231v_bike_1vol = ((m_frame_real*h_frame_real)*sin(lambda_real))/(b_real*A_1vol); % To be multiplied by v^2 in Simulink
+a232v_bike_1vol = -((c_real*g*(m_frame_real*a_frame_real))*sin(lambda_real))/(b_real*A_1vol);
+b3v_bike_1vol = (B_1vol*sin(lambda_real))/(b_real*A_1vol); % To be multiplied by v in Simulink
+
+C_bike_1vol = eye(3);
+D_bike_1vol = zeros(3,1);
+
+
+% State-space matrices for 2 volumes
+% Intermediary variables for clearer matrix definition
+A_2vol = ((m_frame_real/12)*((c_frame_real^2)+(b_frame_real^2)))+(m_frame_real*(h_frame_real^2))+((m_box_real/12)*((c_box_real^2)+(b_box_real^2)))+(m_box_real*(h_box_real^2));
+% B_2vol = ((m_frame_real/12)*((l_frame_real^2)+(b_frame_real^2)))-(m_frame_real*a_frame_real*h_frame_real)+((m_box_real/12)*((c_box_real^2)+(b_box_real^2)))+(m_box_real*a_box_real*h_box_real);
+B_2vol = m_frame_real*a_frame_real*h_frame_real-m_box_real*a_box_real*h_box_real;
+D_2vol = (((m_frame_real*h_frame_real)+(m_box_real*h_box_real))*(v^2))-(c_real*g*((m_frame_real*a_frame_real)-(m_box_real*a_box_real)));
+
+% Matrix definition
+% A_bike_2vol = [                              0                                                              0                     1
+%                                              0                                                              0                     0
+%                (((m_frame_real*h_frame_real)+(m_box_real*h_box_real))*g)/A_2vol       (D_2vol*sin(lambda_real))/(b_real*A_2vol)   0];
+% 
+% B_bike_2vol = [                         0
+%                                         0
+%                (B_2vol*v*sin(lambda_real))/(b_real*A_2vol)];
+
+a13_bike_2vol = (((m_frame_real*h_frame_real)+(m_box_real*h_box_real))*g)/A_2vol;
+a231v_bike_2vol = (((m_frame_real*h_frame_real)+(m_box_real*h_box_real))*sin(lambda_real))/(b_real*A_2vol); % To be multiplied by v^2 in Simulink
+a232v_bike_2vol = -((c_real*g*((m_frame_real*a_frame_real)-(m_box_real*a_box_real)))*sin(lambda_real))/(b_real*A_2vol);
+b3v_bike_2vol = (B_2vol*sin(lambda_real))/(b_real*A_2vol); % To be multiplied by v in Simulink
+
+C_bike_2vol = eye(3);
+D_bike_2vol = zeros(3,1);
+
+
+%% Steering Motor Limitations
 Dead_Band = [0.055, -0.055, 0.005]; % for steering motor [Dead Band Limit(+,-), Relay]
                                     % [rad/sec]
 max_steering_motor_acc = inf;       % maximum steering motor acceleration [rad/s^2]
@@ -122,29 +186,60 @@ max_steering_motor_speed = 7.5;     % maximum steering motor velocity [rad/s]
 min_steering_motor_speed = -7.5;    % minimum steering motor velocity [rad/s]
 delay = 0.045;                      % delay between change in the reference and the output of the steering motor [s
 
-% Angles limitations
+
+%% Angles limitations
 max_roll= pi/2;                  % maximum roll angle permitted [rad] 
                                  % // otherwise simulation stops
-max_handlebar=40*(pi/180);       % maximum handlebar angle [rad] before the saturation
 min_roll= - max_roll;            % minimum roll angle permitted [rad] 
                                  % // otherwise simulation stops
+max_handlebar=40*(pi/180);       % maximum handlebar angle [rad] before the saturation
 min_handlebar=-max_handlebar;    % minumum handlebar angle [rad] before the saturation
 
-% Look ahead / EXPERIMENTAL, NOT FINALIZED!
+
+%% Look ahead / EXPERIMENTAL, NOT FINALIZED!
 look_ahead = 0;      % 1 = enable look-ahead path control, 0=disable
-                   
-% Sensor noise
-noise = 0;                         % 1 = enable noise on the sensors, 0 = disable
-noise_hall = 0.0031;               % variance of hall sensor noise 
-noise_encoder = 1e-7;              % variance of steering motor encoder noise
-noise_gyro = 0.0022;               % variance of gyroscope noise
-noise_acc = 2.4869e-05;            % variance of noise of roll angle estimation based on accelerometer
-noise_pos_meas = 0.51;             % variance of position measurement system
+        
 
-noise_hall = 0;               % variance of hall sensor noise
+%% Sensor noise
+noise = 0;                      % 1 = enable noise on the sensors, 0 = disable
+noise_hall = 0.0031;            % variance of hall sensor noise 
+noise_encoder = 1e-7;           % variance of steering motor encoder noise
+noise_gyro = 0.005;             % variance of gyroscope noise
+noise_acc = 2.4869e-05;         % variance of noise of roll angle estimation based on accelerometer
+noise_pos_meas = 0.51;          % variance of position measurement system
+noise_pos_meas = 0;             % variance of position measurement system
 
 
-% Hall sensor
+%% Sensor offset (step)
+sensor_offset = 0;              % 1 = enable noise on the sensors, 0 = disable
+
+offset_hall = 0;           % amplitude of hall sensor offset step
+time_offset_hall = 45;      % time of hall sensor offset step
+
+offset_encoder = deg2rad(1);        % amplitude of steering motor encoder offset step
+time_offset_encoder = 45;   % time of steering motor encoder offset step
+
+offset_gyro = 0;           % amplitude of gyroscope offset step
+time_offset_gyro = 45;      % time of gyroscope offset step
+
+offset_acc = 0;            % amplitude of accelerometer offset step
+time_offset_acc = 45;       % time of accelerometer offset step
+
+offset_pos_x = 0.1;          % amplitude of x-axis position measurement offset  step
+time_offset_pos_x = 45;     % time of x-axis position measurement offset step
+
+offset_pos_y = 0;          % amplitude of y-axis position measurement offset  step
+time_offset_pos_y  = 45;    % time of y-axis position measurement offset step
+
+% Forward speed offset
+forward_speed_offset = 0; % m/s
+
+% Steering angle correction
+steering_angle_correction = deg2rad(0); % rad
+% steering_angle_correction = deg2rad(5.9); % rad
+
+
+%% Hall sensor
 dout = 0.7; % The diameter of the outer tyre frame
 nrsensor = 5; % The number or magnets in hall sensor
 sensordist = dout*pi/nrsensor; % The distances between different magnets
@@ -166,12 +261,14 @@ gain = 0.3;         % Gain of the box oscillation transfer function
 fork_dynamics_lqr = 0;          % 1 = enable taking into account fork angle in the model ; 0 = disable
 forward_motor_dynamics = 0;     % 1 = enable forward motor dynamics ;  0 = disable
 steering_motor_limitations = 0; % 1 = enable limitations (deadband, delay) ; 0 = disable
-path_tracking = 1;              % 1 = enable path tracking ;  0 = only self balancing, no path tracking
+path_tracking = 0;              % 1 = enable path tracking ;  0 = only self balancing, no path tracking
 path_tracking_indicator = 1;    % 1 = enable the computation of the performance indicators for path tracking ; 0 = disable
 
-plant_model = 1;  % Choice of the model used to represent the bike
-                  % 1 = nonlinear plant ; 2 = linear plant
-                  % 3 = linear plant with neglected fork angle (the simplest plant)
+plant_model = 2;  % Choice of the model used to represent the bike
+                  % 1 = nonlinear plant
+                  % 2 = linear plant with box and bike as 1 volume
+                  % 3 = linear plant with box and bike as 2 volumes
+                  %%%%%% 4 = linear plant with neglected fork angle (the simplest plant)
 
 filter_model = 1; % Choice of the model used for the filter estimating the lateral acceleration due to roll
                   % 1 = use measurements for compensation
@@ -189,15 +286,32 @@ filter_model = 1; % Choice of the model used for the filter estimating the later
 % Q = diag([2000,10,100]); % cost of states in LQR controller
 % R = 2000; 
 
-% GA optimization LQR
-Q = [15.9549   5.1214   -5.7298
-     5.1214   27.6373   21.6896
-    -5.7298   21.6896   27.3988];
-R = 0.2336;
+% % GA optimization LQR
+% Q = [15.9549   5.1214   -5.7298
+%      5.1214   27.6373   21.6896
+%     -5.7298   21.6896   27.3988];
+% R = 0.2336;
+% % R = 6;
 
 % Output matrices
 C = eye(3);      % we assume that we measure all states ; does not depent on velocity
 D = zeros(3,1);  % we assume that inputs don't affect outputs directly ; does not depent on velocity
+
+
+switch lqr_type
+    case 'fast'
+        % 'fast' LQR
+        Q = [10 0 0 ; 0 10 1 ; 0 1 1];
+        R = 1;
+    case 'medium'
+        % 'medium' LQR
+        Q = [100 0 0 ; 0 100 100 ; 0 100 100];
+        R = 1;
+    case 'slow'
+        % 'slow' LQR
+        Q = [100 100 0 ; 100 100 0 ; 0 0 100];
+        R = 1;
+end
 
 
 %% Complementary filter
@@ -222,9 +336,9 @@ path = 1;    % 1: Straight Path --   2: Circle       3:_/-       4: ___O___
              %15: _/- with 45? angles
 
 % Enable / Disable parts of the path tracking
-lat_control = 1;      % 1 = enable lateral control ; 0 = disable
+lat_control = 0;      % 1 = enable lateral control ; 0 = disable
 direct_control = 1;   % 1 = enable direction control ;  0 = disable
-steer_control = 1;    % 1 = enable steering angle (delta) control ;  0 = disable
+steer_control = 0;    % 1 = enable steering angle (delta) control ;  0 = disable
 
 % PID settings for the path tracking
 % Lateral control
@@ -271,6 +385,23 @@ D_direct = 0;   % Direction control D gain
 P_steer = 0.219020351848633;    % Steering control P gain
 I_steer = 0.4510120195392;  % Steering control I gain
 D_steer = 0;    % Steering control D gain
+
+
+switch lqr_type
+    case 'fast'
+        % 'fast' LQR
+        K_dir = [0.2 0 0];
+        K_pos = [0.4 0 0];
+    case 'medium'
+        % 'medium' LQR
+        K_dir = [0.4 0 0];
+        K_pos = [0.185 0 0];
+    case 'slow'
+        % 'slow' LQR
+        K_dir = [0.2 0 0];
+        K_pos = [0.02 0 0];
+end
+
 
 % Kalman filter - Position estimation
 % State matrices

@@ -1,0 +1,137 @@
+clc
+clear all
+close all
+
+
+%==========================================================================
+
+% Features of the code and simulation
+    % IMU separation from bike model implemented
+    % Real/Model parameters distinction
+    % 3D simulation implemented
+    % Implementation of roll angle saturation for 3D simulation
+    % Oscillations
+    % Change of the model to consider 2 parts : frame and box NEW MODEL CORRECTED
+    % Performance indicator
+    
+% Features NOT YET IMPLEMENTED
+    % Comparison model and real bike -> statistic results on inaccurate
+    % Correction of acceleration part
+    % Only paths 1, 2 and 3 are correctly working
+
+%==========================================================================
+
+% To simulate the bike, run this script
+    % Change the parameters in the script "configuration.m"
+    % This script contains 7 sections:
+        % Simulink
+                % Path to the Simulink file to use and Simulink parameters
+        % Physical bike
+                % Characteristics of the bike (dimensions,mass), the sensors (noise) 
+                % and the actuators (deadband, delay, limitations)
+        % Model
+                % Choice of the model to use (linear, nonlinear) and 
+                % which kind of dynamics to include or ignore
+        % LQR control
+                % Definition of the LQR weight matrics (Q and R) and the
+                % state-space output matrices of the system (C and D)
+        % Complementary filter
+                % Coefficients for the complementary filter used to
+                % estimate roll
+        % Path tracking
+                % Choice of the path, definition of the PID coefficients,
+                % definition of the matrices for the Kalman filter
+                % estimating position
+        % Plot settings
+                % Choice of which plots to generate after the end of the
+                % simulation and if an animation of the bike should be
+                % generated
+
+
+%==========================================================================
+
+
+%% Parameters Initialization
+% Load the configuration parameters for the simulation
+configuration;
+% configuration_pidTuning;
+% configuration_boxMovedCenter;
+
+
+%% 
+initial_states = [deg2rad(0) deg2rad(0) deg2rad(0)];
+uneven_mass = 1;
+
+% Path tracking
+path_tracking = 0;              % 1 = enable path tracking ;  0 = only self balancing, no path tracking
+lat_control = 0;      % 1 = enable lateral control ; 0 = disable
+direct_control = 1;   % 1 = enable direction control ;  0 = disable
+steer_control = 0;    % 1 = enable steering angle (delta) control ;  0 = disable
+
+% LQR type
+lqr_type = 'fast';
+% lqr_type = 'medium';
+% lqr_type = 'slow';
+     
+% Sensor offset (step)
+sensor_offset = 0;              % 1 = enable noise on the sensors, 0 = disable
+
+offset_hall = 0;           % amplitude of hall sensor offset step
+time_offset_hall = 45;      % time of hall sensor offset step
+
+offset_encoder = deg2rad(0);        % amplitude of steering motor encoder offset step
+time_offset_encoder = 45;   % time of steering motor encoder offset step
+
+offset_gyro = 0;           % amplitude of gyroscope offset step
+time_offset_gyro = 45;      % time of gyroscope offset step
+
+offset_acc = 0;            % amplitude of accelerometer offset step
+time_offset_acc = 45;       % time of accelerometer offset step
+
+offset_pos_x = 0;          % amplitude of x-axis position measurement offset  step
+time_offset_pos_x = 45;     % time of x-axis position measurement offset step
+
+offset_pos_y = 0;          % amplitude of y-axis position measurement offset  step
+time_offset_pos_y  = 45;    % time of y-axis position measurement offset step
+
+% % Steering angle offset
+% steering_angle_offset = deg2rad(2); % rad
+
+% Forward speed offset
+forward_speed_offset = 0; % m/s
+
+% Steering angle correction
+steering_angle_correction = deg2rad(0); % rad
+steering_angle_correction = deg2rad(-4.7); % rad
+steering_angle_correction = deg2rad(-4.7); % rad
+
+
+%% LQR controller
+lqr_design;
+
+
+%% Load the path
+% Load all the predefined paths and select the chosen one
+paths;
+
+% Compute the cumulative distance and the curvature of the chosen path
+cumulative_distance_curvature;
+
+
+%% Run the Simulink simulation
+try sim(simulink_file)
+        
+catch Error_Reason
+    Error_Reason.message,
+end
+
+
+%% Draw plots
+% draw_plots;
+% draw_plots_pathComparisonReport_20190820;
+draw_plots_controller_tuning;
+figure;plot(heading.Time,rad2deg(heading.Data))
+
+
+%% Compute path tracking performance indicators
+% performance_indicators;

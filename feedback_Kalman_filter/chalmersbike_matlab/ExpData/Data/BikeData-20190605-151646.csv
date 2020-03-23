@@ -1,0 +1,3 @@
+Time,Calculation Time,Reference Velocity,Measured Velocity,Phi,Delta,Phi Dot,Control Input,Velocity Control Input,phi_roll_comp,phi_uncomp,phi_dot,a_x,ay_roll_comp,ay,az,CurrentReading,MotorRPM,phi_Gyro_intArd
+0.011245012283325195,0.011245012283325195,3.9,0.0,-0.004141460009597258,0.0,0.0,0,0.0,-0.0109,-0.0109,0.0,0.0,-0.02,-0.02,1.0,3.87,14254.95,0.01
+0.050451040267944336,0.010281085968017578,3.9,0.0,-0.004379298119050558,0.0,0.0,0,0.0,-0.011,-0.011,0.0,0.01,-0.02,-0.02,1.0,3.87,14149.45,0.02

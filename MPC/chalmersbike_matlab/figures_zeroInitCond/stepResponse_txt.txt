@@ -1,0 +1,5 @@
+Zero initial condition
+System's step response
+Perfect model : No noise, no saturation, no deadband, no hysteresis
+No path tracking
+2deg step at 15s

@@ -99,8 +99,8 @@ ga_options = gaoptimset('StallGenLimit',50,'Display','iter','TimeLimit',3600);
 % ga_options = gaoptimset('StallGenLimit',50,'Display','iter','TimeLimit',3600,'InitialPopulation',X0);
 % ga_options = gaoptimset('StallGenLimit',50,'Display','iter','TimeLimit',600,'InitialPopulation',X0);
 
-% lqr_coeff = ga(@objfun2,length(X0),[],[],[],[],[0 0 0 -Inf -Inf -Inf 0],[],[],[],ga_options)
-lqr_coeff = X0;
+lqr_coeff = ga(@objfun2,length(X0),[],[],[],[],[0 0 0 -Inf -Inf -Inf 0],[],[],[],ga_options)
+% lqr_coeff = X0;
 
 Q = diag(lqr_coeff(1:3)) + squareform(lqr_coeff(4:end-1));
 R = lqr_coeff(end);    

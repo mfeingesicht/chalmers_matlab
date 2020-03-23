@@ -1,5 +1,6 @@
 % Create a vector of velocities at which LQR gains will be computed
-velocity_lqr = [input_velocity - 0.1 , input_velocity , input_velocity + 0.1];
+% velocity_lqr = [input_velocity - 0.1 , input_velocity , input_velocity + 0.1];
+velocity_lqr = [input_velocity];
 
 
 %% Obtain LQR gains

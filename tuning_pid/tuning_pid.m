@@ -1,6 +1,6 @@
 clc
 clear all
-% close all
+close all
 
 
 %==========================================================================
@@ -77,11 +77,29 @@ cumulative_distance_curvature;
 %                [ K_P_3 K_I_3 K_D_3 ]
 % 
 
-% K_comparison = [0.2 0 0 ; 0.25 0 0 ; 0.30 0 0 ; 0.15 0 0];
-K_comparison = [0.15 0 0];
+% % K_comparison = [0.15 0 0];
+% % K_comparison = [0.15 0.1 0];
+% % K_comparison = [0.6 0 0 ; 1.7 0 0];
+% % K_comparison = [0.6 0 0 ; 0.6 0.1 0];
+% K_comparison = [0.25 0.1 0.3];
+% K_comparison = [0.35 0 0.5];
 
-K_dir = [0.6 0 0];
-K_pos = [0.15 0 0];
+
+K_comparison = [0.02 0 0];
+
+
+% % 'fast' LQR
+% K_dir = [0.2 0 0];
+% K_pos = [0.4 0 0];
+
+% % 'medium' LQR
+% K_dir = [0.4 0 0];
+% K_pos = [0.185 0 0];
+
+% 'slow' LQR
+K_dir = [0.2 0 0];
+K_pos = [0.185 0 0];
+
 
 %% Create vectors to store the simulation results
 time = cell(size(K_comparison,1),1);
@@ -95,6 +113,7 @@ Y_BIKE_comparison = cell(size(K_comparison,1),1);
 X_SIGMA_comparison = cell(size(K_comparison,1),1);
 Y_SIGMA_comparison = cell(size(K_comparison,1),1);
 heading_comparison = cell(size(K_comparison,1),1);
+
 
 %% Run simulation for each set of weights
 for index=1:size(K_comparison,1)
@@ -124,5 +143,8 @@ end
 
 %% Plot all simulations together
 draw_plots_pid_testing;
-% % draw_plots_pathComparisonReport_20190820;
-% % figure;hold on;plot(stepinput);plot(stepoutput);
+figure;hold on;plot(stepinput.Time,rad2deg(stepinput.Data));plot(stepoutput.Time,rad2deg(stepoutput.Data));title('Heading Step Response');legend('Heading Step Reference','Bike Heading');xlabel('Time [s]');ylabel('Heading [deg]');
+% figure;hold on;plot(heading_estim);plot(heading_estim_deltaBias);plot(heading_estim_deltaBias_linear)
+% draw_plots_pathComparisonReport_20190820;
+% figure;hold on;plot(stepinput);plot(stepoutput);
+% figure;hold on;plot(heading.Time,rad2deg(heading.Data));plot(heading_estim.Time,rad2deg(heading_estim.Data));plot(heading_estim_deltaBias.Time,rad2deg(heading_estim_deltaBias.Data));
